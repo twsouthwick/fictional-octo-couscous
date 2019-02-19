@@ -73,9 +73,20 @@ namespace Taylor
             _matrix = new BoolMatrix(Size);
 
             var random = new Random();
-            for (int i = 0; i < Size/2; i++)
+
+            // First fill random area with potentially larger squares of true
+            for (int i = 0; i < Size / 2; i++)
             {
-                _matrix[random.Next(0,Size), random.Next(0, Size)] = true;
+                var width = random.Next(0, Size / random.Next(5, Size / 2));
+                var height = random.Next(0, Size / random.Next(5, Size / 2));
+
+                for (int x = 0; x + width < Size && x < width; x++)
+                {
+                    for (int y = 0; y + height < Size && y < height; y++)
+                    {
+                        _matrix[x, y] = true;
+                    }
+                }
             }
         }
 
