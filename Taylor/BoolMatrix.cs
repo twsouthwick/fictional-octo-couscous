@@ -8,7 +8,7 @@ namespace Taylor
         private int _size;
         private bool[,] _array;
 
-        public BoolMatrix(int size)
+        public BoolMatrix(int size) // TODO generalize to m x n rather than n x n
         {
             _size = size;
             _array = new bool[size, size];
@@ -69,7 +69,7 @@ namespace Taylor
             set => _array[x, y] = value;
         }
 
-        public LargestSquareResult GetLargestSquare()
+        public LargestSquareResult GetLargestSquare_Naive()
         {
             var result = new LargestSquareResult
             {
@@ -95,6 +95,72 @@ namespace Taylor
 
             return result;
         }
+        public LargestSquareResult GetLargestSquare_Accumulating()
+        {
+            var result = new LargestSquareResult
+            {
+                Size = 0,
+                StartX = -1,
+                StartY = -1,
+            };
+
+            // track the maximum size square with (x,y) as its bottom right (as value x,y in accumulationMatrix)
+            var accumulationMatrix = new int[_size, _size];
+
+            // see the accumulation matrix with the top and left rows values (mapping true => 1, false => 0)
+            for (int i = 0; i < _size; i++)
+            {
+                int value = this[i, 0] ? 1 : 0;
+                accumulationMatrix[i, 0] = value;
+                if (value > result.Size)
+                {
+                    result.Size = value;
+                    result.StartX = 0;
+                    result.StartY = i;
+                }
+            }
+            for (int j = 1; j < _size; j++)
+            {
+                int value = this[0, j] ? 1 : 0;
+                accumulationMatrix[0, j] = value;
+                if (value > result.Size)
+                {
+                    result.Size = value;
+                    result.StartX = j;
+                    result.StartY = 0;
+                }
+            }
+
+            // now iterate row by row calculating the maximum square size
+            // using the previously calculated values above and to the left 
+            for (int i = 1; i < _size; i++)
+            {
+                for (int j = 1; j < _size; j++)
+                {
+                    if (this[i, j])
+                    {
+                        int minimalNeighbouringSquare = Math.Min(
+                                                            accumulationMatrix[i, j - 1],
+                                                            Math.Min(accumulationMatrix[i - 1, j], accumulationMatrix[i - 1, j - 1]));
+                        int maximumSquare = 1 + minimalNeighbouringSquare;
+                        accumulationMatrix[i, j] = maximumSquare;
+                        if (maximumSquare > result.Size)
+                        {
+                            result.Size = maximumSquare;
+                            // translate bottom right to top left
+                            result.StartX = j - maximumSquare + 1;
+                            result.StartY = i - maximumSquare + 1;
+                        }
+                    }
+                    else
+                    {
+                        accumulationMatrix[i, j] = 0;
+                    }
+                }
+            }
+            return result;
+        }
+
         private int GetSizeOfLargestSquare(int startX, int startY)
         {
             int largestSquare = 0;
